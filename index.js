@@ -4,6 +4,7 @@ let formidable = require('formidable');
 let cors = require('cors');
 let app = express();
 app.use(cors());
+app.use('/download', express.static(`${__dirname}/games`))
 
 const PORT = 8080;
 
@@ -18,10 +19,14 @@ async function getGames() {
 async function getMetadata(game) {
     try {
         const files = await fs.readdir(`${__dirname}/games/${game}`);
+        const images = files.includes('images') ? await fs.readdir(`${__dirname}/games/${game}/images`) : [];
+
         let metadata = files.includes('metadata') ? JSON.parse(await fs.readFile(`${__dirname}/games/${game}/metadata`, 'utf8', (err, metadata) => metadata )): {}
+        metadata.folder = game;
+        metadata.images = images
         return {
             name: metadata.name || game,
-            files,
+            files: files.filter(file => file !== 'metadata').filter(file => file !== 'images'),
             metadata
         }
     } catch (err) {
